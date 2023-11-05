@@ -1,0 +1,4 @@
+from app import mysql
+from repositories.registro_invima_repository import RegistroInvimaRepository
+
+registro_invima_repository = RegistroInvimaRepository(mysql.connection)
