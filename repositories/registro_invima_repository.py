@@ -16,10 +16,10 @@ class RegistroInvimaRepository:
             print("Error al crear un registro de Invima:", str(e))
             return {"error": str(e)}
 
-    def get_registros_invima_for_equipo(self, equipo_id):
+    def get_registros_invima_for_equipo(self, id):
         try:
             cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM registro_invima WHERE id_equipo = %s;", (equipo_id,))
+            cursor.execute("SELECT * FROM registro_invima WHERE id = %s;", (id,))
             registros_invima = cursor.fetchall()
 
             registros_invima_as_dicts = []

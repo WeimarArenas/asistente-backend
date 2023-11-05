@@ -412,14 +412,14 @@ def create_registro_invima_route():
         return jsonify({'error': 'Error al crear el registro de Invima', 'details': result['error']}), 500
 
 
-@my_blueprint.route('/equipos/registros-invima/<int:equipo_id>', methods=['GET'])
-def get_registros_invima_equipo_route(equipo_id):
+@my_blueprint.route('/equipos/registros-invima/<int:id>', methods=['GET'])
+def get_registros_invima_equipo_route(id):
     from repositories.registro_invima_repository import RegistroInvimaRepository
     from app import mysql
 
     try:
         registro_invima_repository = RegistroInvimaRepository(mysql.connection)
-        registros_invima = registro_invima_repository.get_registros_invima_for_equipo(equipo_id)
+        registros_invima = registro_invima_repository.get_registros_invima_for_equipo(id)
 
         if isinstance(registros_invima, list):
             return jsonify({'registros_invima': registros_invima}), 200
