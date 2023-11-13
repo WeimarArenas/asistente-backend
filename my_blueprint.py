@@ -411,7 +411,6 @@ def create_registro_invima_route():
     else:
         return jsonify({'error': 'Error al crear el registro de Invima', 'details': result['error']}), 500
 
-
 @my_blueprint.route('/equipos/registros-invima/<int:id>', methods=['GET'])
 def get_registros_invima_equipo_route(id):
     from repositories.registro_invima_repository import RegistroInvimaRepository
@@ -427,5 +426,73 @@ def get_registros_invima_equipo_route(id):
             return jsonify({'error': 'Error al obtener registros de Invima', 'details': registros_invima['error']}), 500
     except OperationalError as e:
         # Manejo de error de base de datos
+        print(f"Error de base de datos: {str(e)}")
+        return jsonify({'error': 'Error de base de datos'})
+
+# rutas para el manejo de usuarios
+@my_blueprint.route('/usuarios/<string:correo>/<string:clave>', methods=['GET'])
+def get_user_route(correo, clave):
+    from repositories.usuarios_repository import UsuariosRepository
+    from app import mysql
+    
+    try:
+        usuarios_repository = UsuariosRepository(mysql.connection)
+        usuarios = usuarios_repository.get_verify_user(correo, clave)
+
+        if isinstance(usuarios, list):
+            return jsonify({'usuario': usuarios}), 200
+        else:
+            return jsonify({'error': 'Error al verificar los datos', 'details': usuarios['error']}), 500
+    except OperationalError as e:
+        print(f"Error de base de datos: {str(e)}")
+        return jsonify({'error': 'Error de base de datos'})
+    
+
+    # para crear un usuario nuevo
+@my_blueprint.route('/usuarios', methods=['POST'])
+def create_user_route():
+    from repositories.usuarios_repository import UsuariosRepository
+    from app import mysql
+
+    try:
+        data = request.get_json()
+        nombre = data.get('nombre')
+        usuario = data.get('usuario')
+        clave = data.get('clave')
+        correo = data.get('correo')
+
+        usuarios_repository = UsuariosRepository(mysql.connection)
+
+        result = usuarios_repository.create_user(
+            nombre=nombre,
+            usuario=usuario,
+            clave=clave,
+            correo=correo
+        )
+
+        if 'success' in result:
+            return jsonify({'message': 'Usuario creado exitosamente'}), 201
+        else:
+            return jsonify({'error': 'Error al crear el usuario', 'details': result['error']}), 500
+
+    except Exception as e:
+        print(f"Error al procesar la solicitud: {str(e)}")
+        return jsonify({'error': 'Error interno del servidor'}), 500
+    
+    # para actualizar la verificacion
+@my_blueprint.route('/usuarios/verificar/<string:correo>/<string:nueva_verificacion>', methods=['PUT'])
+def update_user_verification_route(correo, nueva_verificacion):
+    from repositories.usuarios_repository import UsuariosRepository
+    from app import mysql
+    
+    try:
+        usuarios_repository = UsuariosRepository(mysql.connection)
+        result = usuarios_repository.update_user_verification(correo, nueva_verificacion)
+
+        if 'success' in result:
+            return jsonify(result), 200
+        else:
+            return jsonify({'error': 'Error al actualizar la verificación', 'details': result['error']}), 500
+    except OperationalError as e:
         print(f"Error de base de datos: {str(e)}")
         return jsonify({'error': 'Error de base de datos'})
