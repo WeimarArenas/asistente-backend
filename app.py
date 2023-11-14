@@ -1,8 +1,11 @@
 from flask import Flask, jsonify
 from flask_mysqldb import MySQL
 from my_blueprint import my_blueprint  # Importa el Blueprint desde my_blueprint.py
+from flask_cors import CORS
+
 
 app = Flask(__name__)
+CORS(app) 
 
 # Configura la base de datos utilizando las credenciales
 app.config['MYSQL_HOST'] = '127.0.0.1'

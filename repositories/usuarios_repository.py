@@ -7,7 +7,7 @@ class UsuariosRepository:
     def get_verify_user(self, correo, clave):
         try:
             cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM usuarios WHERE correo = %s and clave = %s;", (correo, clave,))
+            cursor.execute("SELECT id, nombre, correo, verificado, administrador FROM usuarios WHERE correo = %s and clave = %s;", (correo, clave,))
             usuarios = cursor.fetchall()
 
             usuarios_as_dicts = []
@@ -27,7 +27,7 @@ class UsuariosRepository:
             return {"error": str(e)}
         
         # crear un usuario
-    def create_user(self, nombre, usuario, clave, correo, verificado=0, administrador=0):
+    def create_user(self, nombre, usuario, clave, correo, verificado=False, administrador=False):
         try:
             cursor = self.connection.cursor()
             cursor.execute(
