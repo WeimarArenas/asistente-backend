@@ -5,7 +5,7 @@ class CalibracionesRepository:
     def get_calibraciones_for_equipo(self, equipo_id):
         try:
             cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM usu WHERE id_equipo = %s;", (equipo_id,))
+            cursor.execute("SELECT * FROM calibraciones WHERE id_equipo = %s;", (equipo_id,))
             calibraciones = cursor.fetchall()
 
             calibraciones_as_dicts = []
