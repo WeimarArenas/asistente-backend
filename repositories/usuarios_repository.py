@@ -27,7 +27,7 @@ class UsuariosRepository:
             return {"error": str(e)}
         
         # crear un usuario
-    def create_user(self, nombre, usuario, clave, correo, verificado=False, administrador=False):
+    def create_user(self, nombre, usuario, clave, correo, verificado=True, administrador=False):
         try:
             cursor = self.connection.cursor()
             cursor.execute(
