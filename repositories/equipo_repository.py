@@ -5,7 +5,26 @@ class EquipoRepository:
     def get_equipos(self):
         try:
             cursor = self.connection.cursor()
-            cursor.execute("SELECT * FROM equipo;")
+            cursor.execute("""
+                SELECT
+                    e.id,
+                    e.nombre,
+                    e.marca,
+                    e.modelo,
+                    e.serie,
+                    e.propietario,
+                    e.fecha_fabricacion,
+                    e.fecha_ingreso,
+                    e.condicion_ingreso,
+                    e.riesgo,
+                    e.id_invima,
+                    e.id_area,
+                    a.nombre_area AS nombre_area
+                FROM
+                    equipo e
+                JOIN
+                    areas a ON e.id_area = a.id
+                    """)
             equipos = cursor.fetchall()
 
             # Convierte los resultados a una lista de diccionarios

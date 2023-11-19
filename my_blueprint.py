@@ -29,7 +29,8 @@ def get_equipos_route():
                 "condicion_ingreso": equipo["condicion_ingreso"],
                 "riesgo": equipo["riesgo"],
                 "id_invima": equipo["id_invima"],
-                "id_area": equipo["id_area"]
+                "id_area": equipo["id_area"],
+                "nombre_area": equipo["nombre_area"]
             }
 
             if equipo["fecha_fabricacion"] is not None:
