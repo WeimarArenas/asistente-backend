@@ -497,3 +497,57 @@ def update_user_verification_route(correo, nueva_verificacion):
     except OperationalError as e:
         print(f"Error de base de datos: {str(e)}")
         return jsonify({'error': 'Error de base de datos'})
+    
+    # Todo lo relacionado con nuveas consultas
+@my_blueprint.route('/nuevas-consultas', methods=['GET'])
+def get_new_consultas():
+    from repositories.consultas_repositoy import ConsultasRepository
+    from app import mysql
+    try:
+        consultas_repository = ConsultasRepository(mysql.connection)
+        consultas = consultas_repository.get_consultas()
+        
+        formatted_consultas = []
+        
+        for consulta in consultas:
+            formatted_consulta = {
+                "id": consulta["id"],
+                "tipo_consulta": consulta["tipo_consulta"],
+                "fecha": consulta["fecha"]
+            }
+        
+            if consulta["fecha"] is not None:
+                formatted_consulta["fecha"] = consulta["fecha"].strftime("%Y-%m-%d")
+            else:
+                formatted_consulta["fecha"] = None
+            
+            formatted_consultas.append(formatted_consulta)
+        return jsonify({'consultas': formatted_consultas})
+    except OperationalError as e:
+        print(f"Error con la base de datos: {str(e)}")
+        return jsonify({'Error': 'Error en la base de datos'})
+    
+@my_blueprint.route('/nuevas-consultas', methods=['POST'])
+def create_consulta_route():
+    from repositories.consultas_repositoy import ConsultasRepository
+    from app import mysql
+    
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'error': 'Datos no proporcionados en el cuerpo de la solicitud'}), 400
+
+    tipo_consulta = data.get("tipo_consulta")
+    fecha = data.get("fecha")
+    
+    consultas_repository = ConsultasRepository(mysql.connection)
+    
+    result = consultas_repository.create_consulta(tipo_consulta, fecha)
+    
+    if isinstance(result, int):
+        return jsonify({'message': 'Consulta creada exitosamente', 'calibracion_id': result}), 201
+    else:
+        return jsonify({'error': 'Error al crear la nueva consulta', 'details': result['error']}), 500
+
+    
+            
