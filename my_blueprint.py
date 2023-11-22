@@ -389,18 +389,22 @@ def create_registro_invima_route():
     
     data = request.form
     evidencia_fotografica = request.files.get("evidencia_fotografica")
+    evidencia_documento = request.files.get("evidencia_documento")
 
     if not data or not evidencia_fotografica:
         return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
+    
+    if not data or not evidencia_documento:
+        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
+
 
     numero_registro = data.get("numero_registro")
     vigencia = data.get("vigencia")
     fecha = data.get("fecha")
     evidencia_textual = data.get("evidencia_textual")
-    evidencia_documento = data.get("evidencia_documento")
     id_equipo = data.get("id_equipo")
 
-    if not all([numero_registro, vigencia, fecha, evidencia_textual, evidencia_documento, id_equipo]):
+    if not all([numero_registro, vigencia, fecha, evidencia_textual, id_equipo]):
         return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
 
     registro_invima_repository = RegistroInvimaRepository(mysql.connection)
@@ -408,10 +412,48 @@ def create_registro_invima_route():
     try:
         # Convertir la imagen a datos binarios
         evidencia_fotografica_data = evidencia_fotografica.read()
+        evidencia_documento_data = evidencia_documento.read()
         
         # Guardar los datos binarios en la base de datos
         result = registro_invima_repository.create_registro_invima(
-            numero_registro, vigencia, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento, id_equipo
+            numero_registro, vigencia, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento_data, id_equipo
+        )
+
+        mysql.connection.commit()
+
+        if isinstance(result, int):
+            return jsonify({'message': 'Registro de Invima creado exitosamente', 'registro_invima_id': result}), 201
+        else:
+            return jsonify({'error': 'Error al crear el registro de Invima', 'details': result['error']}), 500
+    except Exception as e:
+        print("Error al procesar la imagen:", str(e))
+        return jsonify({'error': 'Error al procesar la imagen'}), 500
+    
+@my_blueprint.route('/equipos/registros-invima<int:id_equipo>', methods=['PUT'])
+def update_registro_invima_route():
+    from repositories.registro_invima_repository import RegistroInvimaRepository
+    from app import mysql
+    
+    registro_invima_repository = RegistroInvimaRepository(mysql.connection)
+    
+    data = request.get_json()
+    id = data.get("id")
+    numero_registro = data.get("numero_registro")
+    vigencia = data.get("vigencia")
+    fecha = data.get("fecha")
+    evidencia_fotografica = data.get("evidencia_fotografica")
+    evidencia_documento = data.get("evidencia_documento")
+    id_equipo = data.get("id_equipo")
+    evidencia_textual = data.get("evidencia_textual")
+
+    try:
+        # Convertir la imagen a datos binarios
+        evidencia_fotografica_data = evidencia_fotografica.read()
+        evidencia_documento_data = evidencia_documento.read()
+        
+        # Guardar los datos binarios en la base de datos
+        result = registro_invima_repository.update_registro_invima(
+            numero_registro, vigencia, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento_data, id_equipo
         )
 
         mysql.connection.commit()
