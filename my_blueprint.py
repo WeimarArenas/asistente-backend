@@ -386,31 +386,43 @@ def get_mantenimientos_equipo_route(equipo_id):
 def create_registro_invima_route():
     from repositories.registro_invima_repository import RegistroInvimaRepository
     from app import mysql
+    
+    data = request.form
+    evidencia_fotografica = request.files.get("evidencia_fotografica")
 
-    data = request.get_json()
-
-    if not data:
-        return jsonify({'error': 'Datos no proporcionados en el cuerpo de la solicitud'}), 400
+    if not data or not evidencia_fotografica:
+        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
 
     numero_registro = data.get("numero_registro")
     vigencia = data.get("vigencia")
     fecha = data.get("fecha")
-    evidencia_fotografica = data.get("evidencia_fotografica")
     evidencia_textual = data.get("evidencia_textual")
     evidencia_documento = data.get("evidencia_documento")
     id_equipo = data.get("id_equipo")
 
-    if numero_registro is None or vigencia is None or fecha is None or id_equipo is None:
+    if not all([numero_registro, vigencia, fecha, evidencia_textual, evidencia_documento, id_equipo]):
         return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
 
     registro_invima_repository = RegistroInvimaRepository(mysql.connection)
 
-    result = registro_invima_repository.create_registro_invima(numero_registro, vigencia, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo)
+    try:
+        # Convertir la imagen a datos binarios
+        evidencia_fotografica_data = evidencia_fotografica.read()
+        
+        # Guardar los datos binarios en la base de datos
+        result = registro_invima_repository.create_registro_invima(
+            numero_registro, vigencia, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento, id_equipo
+        )
 
-    if isinstance(result, int):
-        return jsonify({'message': 'Registro de Invima creado exitosamente', 'registro_invima_id': result}), 201
-    else:
-        return jsonify({'error': 'Error al crear el registro de Invima', 'details': result['error']}), 500
+        mysql.connection.commit()
+
+        if isinstance(result, int):
+            return jsonify({'message': 'Registro de Invima creado exitosamente', 'registro_invima_id': result}), 201
+        else:
+            return jsonify({'error': 'Error al crear el registro de Invima', 'details': result['error']}), 500
+    except Exception as e:
+        print("Error al procesar la imagen:", str(e))
+        return jsonify({'error': 'Error al procesar la imagen'}), 500
 
 @my_blueprint.route('/equipos/registros-invima/<int:id>', methods=['GET'])
 def get_registros_invima_equipo_route(id):
