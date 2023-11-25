@@ -2,13 +2,14 @@ class EventosRepository:
     def __init__(self, connection):
         self.connection = connection
 
-    def create_evento(self, tipo_evento, estado_evento, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo):
+    def create_evento(self, tipo_evento, estado_evento, fecha, evidencia_fotografica_data, 
+            evidencia_textual, evidencia_documento_data, id_equipo):
         try:
             cursor = self.connection.cursor()
             cursor.execute("""
                 INSERT INTO eventos (tipo_evento, estado_evento, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (tipo_evento, estado_evento, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo))
+            """, (tipo_evento, estado_evento, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento_data, id_equipo))
 
             self.connection.commit()
             return cursor.lastrowid

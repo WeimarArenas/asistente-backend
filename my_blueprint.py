@@ -289,7 +289,15 @@ def create_evento_route():
     from repositories.evento_repository import EventosRepository
     from app import mysql
 
-    data = request.get_json()
+    data = request.form
+    evidencia_fotografica = request.files.get("evidencia_fotografica")
+    evidencia_documento = request.files.get("evidencia_documento")
+
+    if not data or not evidencia_fotografica:
+        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
+    
+    if not data or not evidencia_documento:
+        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
 
     if not data:
         return jsonify({'error': 'Datos no proporcionados en el cuerpo de la solicitud'}), 400
@@ -297,22 +305,37 @@ def create_evento_route():
     tipo_evento = data.get("tipo_evento")
     estado_evento = data.get("estado_evento")
     fecha = data.get("fecha")
-    evidencia_fotografica = data.get("evidencia_fotografica")
+    
     evidencia_textual = data.get("evidencia_textual")
-    evidencia_documento = data.get("evidencia_documento")
     id_equipo = data.get("id_equipo")
 
     if tipo_evento is None or fecha is None or id_equipo is None:
         return jsonify({'error': 'Datos incompletos para crear un evento'}), 400
 
     eventos_repository = EventosRepository(mysql.connection)
+    
+    try:
+        # Convertir la imagen a datos binarios
+        evidencia_fotografica_data = evidencia_fotografica.read()
+        evidencia_documento_data = evidencia_documento.read()
+        
+        # Guardar los datos binarios en la base de datos
+        result = eventos_repository.create_evento(tipo_evento, estado_evento, fecha, evidencia_fotografica_data, 
+            evidencia_textual, evidencia_documento_data, id_equipo
+        )
+        
+        mysql.connection.commit()
 
-    result = eventos_repository.create_evento(tipo_evento, estado_evento, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo)
+        if isinstance(result, int):
+            return jsonify({'message': 'Evento creado exitosamente', 'registro_invima_id': result}), 201
+        else:
+            return jsonify({'error': 'Error al crear el evento', 'details': result['error']}), 500
+    except Exception as e:
+        print("Error al procesar la imagen:", str(e))
+        return jsonify({'error': 'Error al procesar la imagen o documento'}), 500
 
-    if isinstance(result, int):
-        return jsonify({'message': 'Evento creado exitosamente', 'evento_id': result}), 201
-    else:
-        return jsonify({'error': 'Error al crear el evento', 'details': result['error']}), 500
+
+
 
 @my_blueprint.route('/equipos/eventos/<int:equipo_id>', methods=['GET'])
 def get_eventos_equipo_route(equipo_id):
