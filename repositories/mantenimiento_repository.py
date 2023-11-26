@@ -2,13 +2,13 @@ class MantenimientosRepository:
     def __init__(self, connection):
         self.connection = connection
 
-    def create_mantenimiento(self, tipo_mantenimiento, estado, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo):
+    def create_mantenimiento(self, tipo_mantenimiento, estado, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento_data, id_equipo):
         try:
             cursor = self.connection.cursor()
             cursor.execute("""
                 INSERT INTO mantenimientos (tipo_mantenimiento, estado, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (tipo_mantenimiento, estado, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo))
+            """, (tipo_mantenimiento, estado, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento_data, id_equipo))
 
             self.connection.commit()
             return cursor.lastrowid

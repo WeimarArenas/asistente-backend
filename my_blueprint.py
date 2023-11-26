@@ -335,8 +335,6 @@ def create_evento_route():
         return jsonify({'error': 'Error al procesar la imagen o documento'}), 500
 
 
-
-
 @my_blueprint.route('/equipos/eventos/<int:equipo_id>', methods=['GET'])
 def get_eventos_equipo_route(equipo_id):
     from repositories.evento_repository import EventosRepository
@@ -361,7 +359,15 @@ def create_mantenimiento_route():
     from repositories.mantenimiento_repository import MantenimientosRepository
     from app import mysql
 
-    data = request.get_json()
+    data = request.form
+    evidencia_fotografica = request.files.get("evidencia_fotografica")
+    evidencia_documento = request.files.get("evidencia_documento")
+
+    if not data or not evidencia_fotografica:
+        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
+    
+    if not data or not evidencia_documento:
+        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
 
     if not data:
         return jsonify({'error': 'Datos no proporcionados en el cuerpo de la solicitud'}), 400
@@ -369,9 +375,7 @@ def create_mantenimiento_route():
     tipo_mantenimiento = data.get("tipo_mantenimiento")
     estado = data.get("estado")
     fecha = data.get("fecha")
-    evidencia_fotografica = data.get("evidencia_fotografica")
     evidencia_textual = data.get("evidencia_textual")
-    evidencia_documento = data.get("evidencia_documento")
     id_equipo = data.get("id_equipo")
 
     if tipo_mantenimiento is None or fecha is None or id_equipo is None:
@@ -379,12 +383,24 @@ def create_mantenimiento_route():
 
     mantenimientos_repository = MantenimientosRepository(mysql.connection)
 
-    result = mantenimientos_repository.create_mantenimiento(tipo_mantenimiento, estado, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo)
+    try:
+        evidencia_fotografica_data = evidencia_fotografica.read()
+        evidencia_documento_data = evidencia_documento.read()
 
-    if isinstance(result, int):
-        return jsonify({'message': 'Mantenimiento creado exitosamente', 'mantenimiento_id': result}), 201
-    else:
-        return jsonify({'error': 'Error al crear el mantenimiento', 'details': result['error']}), 500
+        result = mantenimientos_repository.create_mantenimiento(tipo_mantenimiento, estado, fecha, 
+                evidencia_fotografica_data, evidencia_textual, evidencia_documento_data, id_equipo
+        )
+
+        mysql.connection.commit()
+
+        if isinstance(result, int):
+            return jsonify({'message': 'Mantenimiento creado exitosamente', 'mantenimiento_id': result}), 201
+        else:
+            return jsonify({'error': 'Error al crear el mantenimeinto del equipo', 'details': result['error']}), 500
+    except Exception as e:
+        print("Error al procesar imagen/documento:", str(e))
+        return jsonify({'error': 'Error al procesar la imagen/documento'}), 500
+
 
 @my_blueprint.route('/equipos/mantenimientos/<int:equipo_id>', methods=['GET'])
 def get_mantenimientos_equipo_route(equipo_id):
