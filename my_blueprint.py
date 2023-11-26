@@ -421,21 +421,15 @@ def get_mantenimientos_equipo_route(equipo_id):
         return jsonify({'error': 'Error de base de datos'})
 
 # Rutas para registro invima
+# Rutas para registro invima
 @my_blueprint.route('/equipos/registros-invima', methods=['POST'])
 def create_registro_invima_route():
     from repositories.registro_invima_repository import RegistroInvimaRepository
     from app import mysql
-    
+
     data = request.form
     evidencia_fotografica = request.files.get("evidencia_fotografica")
     evidencia_documento = request.files.get("evidencia_documento")
-
-    if not data or not evidencia_fotografica:
-        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
-    
-    if not data or not evidencia_documento:
-        return jsonify({'error': 'Datos incompletos para crear un registro de Invima'}), 400
-
 
     numero_registro = data.get("numero_registro")
     vigencia = data.get("vigencia")
@@ -449,10 +443,12 @@ def create_registro_invima_route():
     registro_invima_repository = RegistroInvimaRepository(mysql.connection)
 
     try:
-        # Convertir la imagen a datos binarios
-        evidencia_fotografica_data = evidencia_fotografica.read()
-        evidencia_documento_data = evidencia_documento.read()
-        
+        # Verificar si hay evidencia fotográfica y procesarla
+        evidencia_fotografica_data = evidencia_fotografica.read() if evidencia_fotografica else None
+
+        # Verificar si hay evidencia de documento y procesarla
+        evidencia_documento_data = evidencia_documento.read() if evidencia_documento else None
+
         # Guardar los datos binarios en la base de datos
         result = registro_invima_repository.create_registro_invima(
             numero_registro, vigencia, fecha, evidencia_fotografica_data, evidencia_textual, evidencia_documento_data, id_equipo
@@ -467,6 +463,7 @@ def create_registro_invima_route():
     except Exception as e:
         print("Error al procesar la imagen:", str(e))
         return jsonify({'error': 'Error al procesar la imagen'}), 500
+
     
 @my_blueprint.route('/equipos/registros-invima<int:id_equipo>', methods=['PUT'])
 def update_registro_invima_route():
@@ -551,7 +548,6 @@ def create_user_route():
     try:
         data = request.get_json()
         nombre = data.get('nombre')
-        usuario = data.get('usuario')
         clave = data.get('clave')
         correo = data.get('correo')
 
@@ -559,7 +555,6 @@ def create_user_route():
 
         result = usuarios_repository.create_user(
             nombre=nombre,
-            usuario=usuario,
             clave=clave,
             correo=correo
         )
@@ -567,7 +562,7 @@ def create_user_route():
         if 'success' in result:
             return jsonify({'message': 'Usuario creado exitosamente'}), 201
         else:
-            return jsonify({'error': 'Error al crear el usuario', 'details': result['error']}), 500
+            return jsonify({'error': 'Error al crear el usuario', 'details': str(result['error'])}), 500
 
     except Exception as e:
         print(f"Error al procesar la solicitud: {str(e)}")

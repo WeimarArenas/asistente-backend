@@ -5,10 +5,31 @@ class RegistroInvimaRepository:
     def create_registro_invima(self, numero_registro, vigencia, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo):
         try:
             cursor = self.connection.cursor()
-            cursor.execute("""
-                INSERT INTO registro_invima (numero_registro, vigencia, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (numero_registro, vigencia, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo))
+
+            if evidencia_fotografica is None and evidencia_documento is None:
+                # Si no hay evidencia fotográfica ni de documento, omitir esos campos en la consulta
+                cursor.execute("""
+                    INSERT INTO registro_invima (numero_registro, vigencia, fecha, evidencia_textual, id_equipo)
+                    VALUES (%s, %s, %s, %s, %s)
+                """, (numero_registro, vigencia, fecha, evidencia_textual, id_equipo))
+            elif evidencia_fotografica is None:
+                # Si no hay evidencia fotográfica, omitir ese campo en la consulta
+                cursor.execute("""
+                    INSERT INTO registro_invima (numero_registro, vigencia, fecha, evidencia_textual, evidencia_documento, id_equipo)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (numero_registro, vigencia, fecha, evidencia_textual, evidencia_documento, id_equipo))
+            elif evidencia_documento is None:
+                # Si no hay evidencia de documento, omitir ese campo en la consulta
+                cursor.execute("""
+                    INSERT INTO registro_invima (numero_registro, vigencia, fecha, evidencia_textual, evidencia_fotografica, id_equipo)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (numero_registro, vigencia, fecha, evidencia_textual, evidencia_fotografica, id_equipo))
+            else:
+                # Si hay evidencia fotográfica y de documento, incluir todos los campos en la consulta
+                cursor.execute("""
+                    INSERT INTO registro_invima (numero_registro, vigencia, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (numero_registro, vigencia, fecha, evidencia_fotografica, evidencia_textual, evidencia_documento, id_equipo))
 
             self.connection.commit()
             return cursor.lastrowid

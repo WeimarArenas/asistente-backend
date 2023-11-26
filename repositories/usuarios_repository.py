@@ -27,12 +27,12 @@ class UsuariosRepository:
             return {"error": str(e)}
         
         # crear un usuario
-    def create_user(self, nombre, usuario, clave, correo, verificado=True, administrador=False):
+    def create_user(self, nombre, clave, correo, verificado=True, administrador=True):
         try:
             cursor = self.connection.cursor()
             cursor.execute(
-                "INSERT INTO usuarios (nombre, usuario, clave, correo, verificado, administrador) VALUES (%s, %s, %s, %s, %s, %s);",
-                (nombre, usuario, clave, correo, verificado, administrador)
+                "INSERT INTO usuarios (nombre, clave, correo, verificado, administrador) VALUES (%s, %s, %s, %s, %s);",
+                (nombre, clave, correo, verificado, administrador)
             )
             self.connection.commit()
             cursor.close()
